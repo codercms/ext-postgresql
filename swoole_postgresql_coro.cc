@@ -718,18 +718,19 @@ static PHP_METHOD(swoole_postgresql_coro, query)
     {
         char * err_msg = PQerrorMessage(pgsql);
         swWarn("PQsendQuery error:[%s]", err_msg);
-
-        RETURN_FALSE;
     }
 
     php_coro_context *context = php_swoole_postgresql_coro_get_context(ZEND_THIS);
     context->coro_params = *ZEND_THIS;
 
-    swoole_event_add(object->fd, SW_EVENT_READ, PHP_SWOOLE_FD_POSTGRESQL);
-
-    if (timeout > 0)
+    if (ret == 1)
     {
-        object->timer = swoole_timer_add((long)(timeout * 1000), 0, swoole_pgsql_coro_onTimeout, context);
+        swoole_event_add(object->fd, SW_EVENT_READ, PHP_SWOOLE_FD_POSTGRESQL);
+
+        if (timeout > 0)
+        {
+            object->timer = swoole_timer_add((long) (timeout * 1000), 0, swoole_pgsql_coro_onTimeout, context);
+        }
     }
 
     PHPCoroutine::yield_m(return_value, context);
