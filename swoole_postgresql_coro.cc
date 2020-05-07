@@ -359,7 +359,11 @@ static void swoole_pgsql_coro_onTimeout(swTimer *timer, swTimer_node *tnode)
     zval *zobject = &_zobject;
 
     pg_object *object = php_swoole_postgresql_coro_get_object(zobject);
+
+    // reset timer
+    swoole_timer_del(object->timer);
     object->timer = NULL;
+
     pgsql = object->conn;
 
     switch (PQstatus(pgsql))
@@ -703,6 +707,8 @@ static PHP_METHOD(swoole_postgresql_coro, query)
     {
         char * err_msg = PQerrorMessage(pgsql);
         swWarn("error:[%s]", err_msg);
+
+        RETURN_FALSE;
     }
 
     php_coro_context *context = php_swoole_postgresql_coro_get_context(ZEND_THIS);
